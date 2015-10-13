@@ -19,12 +19,12 @@ end
 class User
   def self.find_by_id(id)
     results = QuestionsDatabase.instance.execute(<<-SQL, id)
-    SELECT
-      *
-    FROM
-      users
-    WHERE
-      users.id = ?
+      SELECT
+        *
+      FROM
+        users
+      WHERE
+        users.id = ?
     SQL
 
     results.map { |result| User.new(result) }.first
@@ -38,15 +38,40 @@ class User
     @l_name = options['l_name']
   end
 
+  def save
+
+    if self.id.nil?
+      params = [f_name, l_name]
+      QuestionsDatabase.instance.execute(<<-SQL, *params)
+        INSERT INTO
+          users (f_name, l_name)
+        VALUES
+          (?, ?)
+      SQL
+
+        @id = QuestionsDatabase.instance.last_insert_row_id
+      else
+        params = [f_name, l_name]
+        QuestionsDatabase.instance.execute(<<-SQL, *params)
+          UPDATE
+            users (f_name, l_name)
+          VALUES
+            (?, ?)
+        SQL
+      end
+    end
+
+
+
   def self.find_by_name(f_name, l_name)
     results = QuestionsDatabase.instance.execute(<<-SQL, f_name, l_name)
-    SELECT
-      *
-    FROM
-      users
-    WHERE
-      users.f_name = ?
-      AND users.l_name = ?
+      SELECT
+        *
+      FROM
+        users
+      WHERE
+        users.f_name = ?
+        AND users.l_name = ?
     SQL
 
     results.map { |result| User.new(result) }.first
@@ -70,15 +95,15 @@ class User
 
   def average_karma
     result = QuestionsDatabase.instance.execute(<<-SQL, id)
-    SELECT
-      CAST (COUNT(question_likes.id) AS FLOAT)/COUNT(DISTINCT questions.id) AS average_karma
-    FROM
-      question_likes
-    LEFT OUTER JOIN
-      questions
-      ON question_likes.question_id = questions.id
-    WHERE
-      questions.user_id = ?
+      SELECT
+        CAST (COUNT(question_likes.id) AS FLOAT)/COUNT(DISTINCT questions.id) AS average_karma
+      FROM
+        question_likes
+      LEFT OUTER JOIN
+        questions
+        ON question_likes.question_id = questions.id
+      WHERE
+        questions.user_id = ?
     SQL
 
     result.first['average_karma']
@@ -90,12 +115,12 @@ end
 class Question
   def self.find_by_id(id)
     results = QuestionsDatabase.instance.execute(<<-SQL, id)
-    SELECT
-      *
-    FROM
-      questions
-    WHERE
-      questions.id = ?
+      SELECT
+        *
+      FROM
+        questions
+      WHERE
+        questions.id = ?
     SQL
 
     results.map { |result| Question.new(result) }.first
@@ -103,12 +128,12 @@ class Question
 
   def self.find_by_author_id(id)
     results = QuestionsDatabase.instance.execute(<<-SQL, id)
-    SELECT
-      *
-    FROM
-      questions
-    WHERE
-      questions.user_id = ?
+      SELECT
+        *
+      FROM
+        questions
+      WHERE
+        questions.user_id = ?
     SQL
 
     results.map { |result| Question.new(result) }.first
@@ -157,12 +182,12 @@ end
 class QuestionFollow
   def self.find_by_id(id)
     results = QuestionsDatabase.instance.execute(<<-SQL, id)
-    SELECT
-      *
-    FROM
-      question_follows
-    WHERE
-      question_follows.id = ?
+      SELECT
+        *
+      FROM
+        question_follows
+      WHERE
+        question_follows.id = ?
     SQL
 
     results.map { |result| QuestionFollow.new(result) }.first
@@ -170,15 +195,15 @@ class QuestionFollow
 
   def self.followers_for_question_id(question_id)
     results = QuestionsDatabase.instance.execute(<<-SQL, question_id)
-    SELECT
-      users.id
-    FROM
-      question_follows
-    JOIN
-      users
-      ON question_follows.user_id = users.id
-    WHERE
-      question_follows.question_id = ?
+      SELECT
+        users.id
+      FROM
+        question_follows
+      JOIN
+        users
+        ON question_follows.user_id = users.id
+      WHERE
+        question_follows.question_id = ?
     SQL
 
     results.map { |user_id| User.find_by_id(user_id['id']) }
@@ -186,15 +211,15 @@ class QuestionFollow
 
   def self.followed_questions_for_user_id(user_id)
     results = QuestionsDatabase.instance.execute(<<-SQL, user_id)
-    SELECT
-      questions.id
-    FROM
-      question_follows
-    JOIN
-      questions
-      ON question_follows.question_id = questions.id
-    WHERE
-      question_follows.user_id = ?
+      SELECT
+        questions.id
+      FROM
+        question_follows
+      JOIN
+        questions
+        ON question_follows.question_id = questions.id
+      WHERE
+        question_follows.user_id = ?
     SQL
 
     results.map { |question_id| Question.find_by_id(question_id['id']) }
@@ -203,18 +228,18 @@ class QuestionFollow
 
   def self.most_followed_questions(n)
     results = QuestionsDatabase.instance.execute(<<-SQL, n)
-    SELECT
-      questions.id
-    FROM
-      question_follows
-    JOIN
-      questions
-      ON question_follows.question_id = questions.id
-    GROUP BY
-      questions.id
-    ORDER BY
-      COUNT(question_follows.user_id)
-    LIMIT ?
+      SELECT
+        questions.id
+      FROM
+        question_follows
+      JOIN
+        questions
+        ON question_follows.question_id = questions.id
+      GROUP BY
+        questions.id
+      ORDER BY
+        COUNT(question_follows.user_id)
+      LIMIT ?
     SQL
 
     results.map { |question_id| Question.find_by_id(question_id['id']) }
@@ -234,12 +259,12 @@ end
 class Reply
   def self.find_by_id(id)
     results = QuestionsDatabase.instance.execute(<<-SQL, id)
-    SELECT
-      *
-    FROM
-      replies
-    WHERE
-      replies.id = ?
+      SELECT
+        *
+      FROM
+        replies
+      WHERE
+        replies.id = ?
     SQL
 
     results.map { |result| Reply.new(result) }.first
@@ -247,12 +272,12 @@ class Reply
 
   def self.find_by_user_id(user_id)
     results = QuestionsDatabase.instance.execute(<<-SQL, user_id)
-    SELECT
-      *
-    FROM
-      replies
-    WHERE
-      replies.user_id = ?
+      SELECT
+        *
+      FROM
+        replies
+      WHERE
+        replies.user_id = ?
     SQL
 
     results.map { |result| Reply.new(result) }
@@ -260,12 +285,12 @@ class Reply
 
   def self.find_by_question_id(question_id)
     results = QuestionsDatabase.instance.execute(<<-SQL, question_id)
-    SELECT
-      *
-    FROM
-      replies
-    WHERE
-      replies.question_id = ?
+      SELECT
+        *
+      FROM
+        replies
+      WHERE
+        replies.question_id = ?
     SQL
 
     results.map { |result| Reply.new(result) }
@@ -342,15 +367,15 @@ class QuestionLike
 
   def self.num_likes_for_question_id(question_id)
     results = QuestionsDatabase.instance.execute(<<-SQL, question_id)
-    SELECT
-      COUNT(users.id) AS count
-    FROM
-      question_likes
-    JOIN
-      users
-      ON question_likes.user_id = users.id
-    WHERE
-      question_likes.question_id = ?
+      SELECT
+        COUNT(users.id) AS count
+      FROM
+        question_likes
+      JOIN
+        users
+        ON question_likes.user_id = users.id
+      WHERE
+        question_likes.question_id = ?
     SQL
 
     results.first['count']
@@ -358,15 +383,15 @@ class QuestionLike
 
   def self.liked_questions_for_user_id(user_id)
     results = QuestionsDatabase.instance.execute(<<-SQL, user_id)
-    SELECT
-      questions.id
-    FROM
-      question_likes
-    JOIN
-      questions
-      ON question_likes.question_id = questions.id
-    WHERE
-      question_likes.user_id = ?
+      SELECT
+        questions.id
+      FROM
+        question_likes
+      JOIN
+        questions
+        ON question_likes.question_id = questions.id
+      WHERE
+        question_likes.user_id = ?
     SQL
 
     results.map { |question_id| Question.find_by_id(question_id['id']) }
@@ -376,18 +401,18 @@ class QuestionLike
 
   def self.most_liked_questions(n)
     results = QuestionsDatabase.instance.execute(<<-SQL, n)
-    SELECT
-      questions.id
-    FROM
-      question_likes
-    JOIN
-      questions
-      ON question_likes.question_id = questions.id
-    GROUP BY
-      questions.id
-    ORDER BY
-      COUNT(question_likes.user_id)
-    LIMIT ?
+      SELECT
+        questions.id
+      FROM
+        question_likes
+      JOIN
+        questions
+        ON question_likes.question_id = questions.id
+      GROUP BY
+        questions.id
+      ORDER BY
+        COUNT(question_likes.user_id)
+      LIMIT ?
     SQL
 
     results.map { |question_id| Question.find_by_id(question_id['id']) }
