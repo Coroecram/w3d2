@@ -40,6 +40,55 @@ class SuperTable
     results.map { |result| self.new(result) }.first
   end
 
+  def self.all
+    table = NAME_CONVERT[self.to_s]
+    results = QuestionsDatabase.instance.execute(<<-SQL)
+      SELECT
+        *
+      FROM
+        #{table}
+    SQL
+
+    results.map { |result| self.new(result) }
+  end
+
+
+  def save
+    byebug
+    table = NAME_CONVERT[self.class.to_s]
+    inter_array = []
+    iv_names = self.instance_variables
+    iv_names_clean = iv_names.map { |var| var.to_s[1..-1] }[1..-1]
+    params = iv_names_clean.map { |var| self.send(var) }
+    var_insert = "(#{iv_names_clean.join(', ')})"
+    params.length.times { inter_array << "?" }
+    question_marks = "(#{inter_array.join(", ")})"
+    if self.id.nil?
+      QuestionsDatabase.instance.execute(<<-SQL, *params)
+        INSERT INTO
+          #{table} #{var_insert}
+        VALUES
+          #{question_marks}
+      SQL
+
+      self.id = QuestionsDatabase.instance.last_insert_row_id
+      else
+        set_cols = "#{iv_names_clean.join(" = ?, ")} = ?"
+        params << self.id
+        QuestionsDatabase.instance.execute(<<-SQL, *params)
+          UPDATE
+            #{table}
+          SET
+            #{set_cols}
+          WHERE
+            #{table}.id = ?
+        SQL
+      end
+    end
+
+    def where(options = {})
+    end
+
 end
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -65,29 +114,29 @@ class User < SuperTable
     @l_name = options['l_name']
   end
 
-  def save
-    if self.id.nil?
-      params = [f_name, l_name]
-      QuestionsDatabase.instance.execute(<<-SQL, *params)
-        INSERT INTO
-          users (f_name, l_name)
-        VALUES
-          (?, ?)
-      SQL
-
-      @id = QuestionsDatabase.instance.last_insert_row_id
-      else
-        params = [f_name, l_name, self.id]
-        QuestionsDatabase.instance.execute(<<-SQL, *params)
-          UPDATE
-            users
-          SET
-            f_name = ?, l_name = ?
-          WHERE
-            users.id = ?
-        SQL
-      end
-    end
+  # def save
+  #   if self.id.nil?
+  #     params = [f_name, l_name]
+  #     QuestionsDatabase.instance.execute(<<-SQL, *params)
+  #       INSERT INTO
+  #         users (f_name, l_name)
+  #       VALUES
+  #         (?, ?)
+  #     SQL
+  #
+  #     @id = QuestionsDatabase.instance.last_insert_row_id
+  #     else
+  #       params = [f_name, l_name, self.id]
+  #       QuestionsDatabase.instance.execute(<<-SQL, *params)
+  #         UPDATE
+  #           users
+  #         SET
+  #           f_name = ?, l_name = ?
+  #         WHERE
+  #           users.id = ?
+  #       SQL
+  #     end
+  #   end
 
 
 
