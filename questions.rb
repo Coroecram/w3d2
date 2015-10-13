@@ -1,5 +1,6 @@
 require 'singleton'
 require 'sqlite3'
+require 'byebug'
 
 class QuestionsDatabase < SQLite3::Database
   include Singleton
@@ -12,6 +13,8 @@ class QuestionsDatabase < SQLite3::Database
     self.type_translation = true
   end
 end
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 class User
   def self.find_by_id(id)
@@ -57,7 +60,13 @@ class User
     results = Reply.find_by_user_id(id)
   end
 
+  def followed_questions
+    QuestionFollow.followed_questions_for_user_id(id)
+  end
+
 end
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 class Question
   def self.find_by_id(id)
@@ -94,6 +103,9 @@ class Question
     Reply.find_by_question_id(id)
   end
 
+  def followers
+    QuestionFollow.followers_for_question_id(id)
+  end
 
   attr_accessor :id, :title, :body, :user_id
 
@@ -104,6 +116,8 @@ class Question
     @user_id = options['user_id']
   end
 end
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 class QuestionFollow
   def self.find_by_id(id)
@@ -122,16 +136,36 @@ class QuestionFollow
   def self.followers_for_question_id(question_id)
     results = QuestionsDatabase.instance.execute(<<-SQL, question_id)
     SELECT
-      *
+      users.id
     FROM
       question_follows
+    JOIN
+      users
+      ON question_follows.user_id = users.id
     WHERE
       question_follows.question_id = ?
     SQL
 
-    results.map { |user_id| User.find_by_id(user_id) }
+    results.map { |user_id| User.find_by_id(user_id['id']) }
 
   end
+
+  def self.followed_questions_for_user_id(user_id)
+    results = QuestionsDatabase.instance.execute(<<-SQL, user_id)
+    SELECT
+      questions.id
+    FROM
+      question_follows
+    JOIN
+      questions
+      ON question_follows.question_id = questions.id
+    WHERE
+      question_follows.user_id = ?
+    SQL
+
+    results.map { |question_id| Question.find_by_id(question_id['id']) }
+  end
+
 
   attr_accessor :id, :user_id, :question_id
 
@@ -141,6 +175,8 @@ class QuestionFollow
     @question_id = options['question_id']
   end
 end
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 class Reply
   def self.find_by_id(id)
@@ -218,6 +254,8 @@ class Reply
   end
 
 end
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 class QuestionLike
   def self.find_by_id(id)
