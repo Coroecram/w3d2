@@ -54,7 +54,7 @@ INSERT INTO
 VALUES
   ('Meow?', 'Meow, meow?', (SELECT id FROM users WHERE f_name = 'Third')),
   ('Where?', 'Where am I?', (SELECT id FROM users WHERE f_name = 'Guy')),
-  ('Why?', 'Why???', (SELECT id FROM users WHERE f_name = 'Lady'));
+  ('Why?', 'Why?!?!?', (SELECT id FROM users WHERE f_name = 'Lady'));
 
 INSERT INTO
   question_follows (user_id, question_id)
@@ -77,5 +77,6 @@ VALUES
 INSERT INTO
   question_likes (user_id, question_id)
 VALUES
-  ((SELECT id FROM users WHERE f_name = 'Third'), (SELECT id FROM questions WHERE title = 'Where?')),
+  ((SELECT id FROM users WHERE f_name = 'Third'), (SELECT id FROM questions WHERE body = 'Why?!?!?')),
+  ((SELECT id FROM users WHERE f_name = 'Lady'), (SELECT id FROM questions WHERE body = 'Why?!?!?')),
   ((SELECT id FROM users WHERE f_name = 'Guy'), (SELECT id FROM questions WHERE title = 'Meow?'));
