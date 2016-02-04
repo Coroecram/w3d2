@@ -54,7 +54,6 @@ class SuperTable
 
 
   def save
-    byebug
     table = NAME_CONVERT[self.class.to_s]
     inter_array = []
     iv_names = self.instance_variables
@@ -86,8 +85,20 @@ class SuperTable
       end
     end
 
-    def where(options = {})
-    end
+    # IN PROGRESS #
+
+  # def self.where(options = {})
+  #   cols = options.keys.map { |key| key.to_s }
+  #
+  #   results = QuestionsDatabase.instance.execute(<<-SQL)
+  #     SELECT
+  #       options keys
+  #     FROM
+  #       #{self.all}
+  #     WHERE
+  #       options value
+  #   SQL
+  # end
 
 end
 
@@ -190,6 +201,7 @@ end
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 class Question < SuperTable
+
   # def self.find_by_id(id)
   #   results = QuestionsDatabase.instance.execute(<<-SQL, id)
   #     SELECT
@@ -257,6 +269,7 @@ end
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 class QuestionFollow < SuperTable
+
   # def self.find_by_id(id)
   #   results = QuestionsDatabase.instance.execute(<<-SQL, id)
   #     SELECT
@@ -334,6 +347,7 @@ end
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 class Reply < SuperTable
+
   # def self.find_by_id(id)
   #   results = QuestionsDatabase.instance.execute(<<-SQL, id)
   #     SELECT
@@ -413,6 +427,7 @@ end
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 class QuestionLike < SuperTable
+
   # def self.find_by_id(id)
   #   results = QuestionsDatabase.instance.execute(<<-SQL, id)
   #   SELECT
